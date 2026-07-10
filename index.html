@@ -116,6 +116,7 @@
   td .flag.ok{background:var(--self-bg);color:var(--self)}
   td input.mini{font:inherit;font-family:var(--mono);font-size:.82rem;width:5.5rem;padding:.3rem .4rem;
     border:1px solid var(--line);border-radius:5px;background:var(--paper);text-align:right}
+  td input.mini.rate{width:8rem}
   td input.mini:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
   .subrow td{color:var(--muted);font-size:.78rem;padding-top:0;border-bottom:1px solid var(--line)}
   .rebuttal{background:var(--self-bg);border:1px solid var(--self);border-radius:9px;padding:.9rem 1.1rem;
@@ -192,6 +193,7 @@
     <p class="tablelead"><b>Scope-change trigger</b> is the smaller of 20% of a project's BSLs or 200, CAIs included. Any project over 200 removals trips it from the file alone, and crossing it requires a New No BEAD Locations Post-Award Change with NTIA approval plus a budget modification.</p>
     <p class="tablelead">For a project under 200, you may hand-enter its approved BSL count (its current approved project area, CAIs included) to test the 20% line. <span class="ref">FAQ 9.7, p.52</span></p>
     <p class="tablelead">The <b>Rate ($/loc)</b> is optional. Please hand-enter the project's approved per-location cost from your Final Proposal budget. The rate is entered per project. Leave it blank to skip the dollar estimate.</p>
+    <p class="tablelead">For scale, LEO awards in the BEAD Benefit-of-the-Bargain round have run roughly <b>$800&ndash;$1,700 per location</b> (Starlink national average ~$1,380, Amazon Leo/Kuiper ~$730), with a state-by-state range of about $600 to $3,000. Enter your own approved figure; these are only a sanity check. <span class="ref">Benton Institute, June 2025; Broadband Breakfast (TN analysis), July 2025; Quilty Space, Jan 2026</span></p>
     <div class="tablewrap">
       <table id="ptable">
         <thead>
@@ -328,7 +330,7 @@
         trigCell='<div class="trigcell">'+input+verdict+'</div>';
       }
       // per-project rate + dollars
-      var rateInput='<input class="mini" data-id="'+id+'" data-f="rate" type="number" min="0" placeholder="$/loc" value="'+(rate||'')+'">';
+      var rateInput='<input class="mini rate" data-id="'+id+'" data-f="rate" type="number" min="0" step="1" placeholder="e.g. 1400" value="'+(rate||'')+'">';
       var dollars = rate>0 ? t*rate : null;
       if(dollars!=null){ anyDollars=true; sum.dollars+=dollars; }
       sum.rc3+=p.rc3; sum.rc5+=p.rc5; sum.tot+=t;
