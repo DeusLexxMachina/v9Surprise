@@ -116,7 +116,7 @@
   td .flag.ok{background:var(--self-bg);color:var(--self)}
   td input.mini{font:inherit;font-family:var(--mono);font-size:.82rem;width:5.5rem;padding:.3rem .4rem;
     border:1px solid var(--line);border-radius:5px;background:var(--paper);text-align:right}
-  td input.mini.rate{width:8rem}
+  td input.mini.rate{width:6rem}
   td input.mini:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
   .subrow td{color:var(--muted);font-size:.78rem;padding-top:0;border-bottom:1px solid var(--line)}
   .rebuttal{background:var(--self-bg);border:1px solid var(--self);border-radius:9px;padding:.9rem 1.1rem;
@@ -317,7 +317,7 @@
         // over 200 always trips, regardless of base
         trigCell='<span class="flag act">Over 200 &middot; New No BEAD PAC</span>';
       } else {
-        var input='<input class="mini" data-id="'+id+'" data-f="base" type="number" min="1" placeholder="base" value="'+(base||'')+'">';
+        var input='<input class="mini" data-id="'+id+'" data-f="base" type="text" inputmode="numeric" placeholder="base" value="'+(base||'')+'">';
         var verdict;
         if(base>0){
           var trig=Math.min(base*0.2,200), over=t>trig;
@@ -330,7 +330,7 @@
         trigCell='<div class="trigcell">'+input+verdict+'</div>';
       }
       // per-project rate + dollars
-      var rateInput='<input class="mini rate" data-id="'+id+'" data-f="rate" type="number" min="0" step="1" placeholder="e.g. 1400" value="'+(rate||'')+'">';
+      var rateInput='<input class="mini rate" data-id="'+id+'" data-f="rate" type="text" inputmode="numeric" maxlength="5" placeholder="e.g. 1400" value="'+(rate||'')+'">';
       var dollars = rate>0 ? t*rate : null;
       if(dollars!=null){ anyDollars=true; sum.dollars+=dollars; }
       sum.rc3+=p.rc3; sum.rc5+=p.rc5; sum.tot+=t;
@@ -356,7 +356,7 @@
     // wire mini inputs
     els.pbody.querySelectorAll('input.mini').forEach(function(inp){
       inp.addEventListener('input',function(){
-        var id=inp.dataset.id, f=inp.dataset.f, v=parseFloat(inp.value);
+        var id=inp.dataset.id, f=inp.dataset.f, v=parseFloat(String(inp.value).replace(/[^0-9.]/g,''));
         perProject[id]=perProject[id]||{base:null,rate:null};
         perProject[id][f]= isNaN(v)?null:v;
         render();
