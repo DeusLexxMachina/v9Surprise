@@ -293,6 +293,12 @@
   }
   function render(){
     if(!model) return;
+    // remember which mini input has focus so a re-render doesn't yank the cursor
+    var af=document.activeElement, focusId=null, focusF=null, caret=null;
+    if(af && af.classList && af.classList.contains('mini')){
+      focusId=af.dataset.id; focusF=af.dataset.f;
+      try{ caret=af.selectionStart; }catch(e){ caret=null; }
+    }
     var total=model.rc3+model.rc5;
     els.totRemoved.textContent=fmt(total);
     els.projCount.textContent=fmt(model.order.length);
@@ -362,6 +368,17 @@
         render();
       });
     });
+    // restore focus + caret to the input the user was typing in
+    if(focusId!=null){
+      var inps=els.pbody.querySelectorAll('input.mini');
+      for(var i=0;i<inps.length;i++){
+        if(inps[i].dataset.id===focusId && inps[i].dataset.f===focusF){
+          inps[i].focus();
+          if(caret!=null){ try{ inps[i].setSelectionRange(caret,caret); }catch(e){} }
+          break;
+        }
+      }
+    }
   }
   function handle(file){
     els.err.classList.add('hidden');
