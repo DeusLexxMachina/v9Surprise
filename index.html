@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The V9 Surprise, LEO Removal Scale Check</title>
+<meta name="description" content="A browser-side scale check for the NTIA Fabric v9 LEO Capacity Subgrant removal list. Counts Reason Code 3 and 5 removals by project, flags the 20% / 200 scope-change threshold, and estimates the allocation removed. Nothing leaves your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="The V9 Surprise: how big is your LEO removal list?">
+<meta property="og:description" content="Drop in the NTIA v9 LEO removal file and get scale by project: RC3 and RC5 counts, threshold flags, and allocation removed. Runs entirely in your browser.">
+<meta property="og:url" content="https://deuslexxmachina.github.io/V9Surprise/">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Mono:wght@400;500&display=swap');
+  :root{
+    --ink:#13241f;
+    --paper:#f1faf6;
+    --card:#ffffff;
+    --line:#c7e8dd;
+    --muted:#5b7268;
+    --self:#0aa885;      /* within threshold / keep */
+    --self-bg:#ccf4e7;
+    --ntia:#9e2b3d;      /* action required (maroon) */
+    --ntia-bg:#f7dbe0;
+    --accent:#06bfa6;    /* bright teal */
+    --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+    --display:"Playfair Display",Georgia,serif;
+    --mono:"DM Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:var(--serif);line-height:1.5;
+    padding:2rem 1.1rem 4rem;
+  }
+  .wrap{max-width:760px;margin:0 auto}
+
+  /* hero */
+  .hero{position:relative;border-radius:12px;overflow:hidden;
+    background:linear-gradient(120deg,#053a33 0%,#0a564b 42%,#5f2130 100%);
+    border:1px solid #0a5b4f;padding:2rem 1.4rem 1.7rem;margin-bottom:1.5rem}
+  .hero .inner{position:relative;z-index:1}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;
+    text-transform:uppercase;margin:0 0 .55rem}
+  .hero .eyebrow{color:#6fe6cd}
+  .hero h1{font-family:var(--display);color:#eafef8;margin:0 0 .5rem;
+    font-size:2rem;line-height:1.08;font-weight:800;letter-spacing:-.01em}
+  .hero .sub{color:#b6e8db;margin:0;max-width:56ch;font-size:1rem}
+  .hero .cred{font-family:var(--serif);font-style:italic;font-size:.76rem;
+    color:#7fd6c4;margin:.85rem 0 0}
+  .hero .cred a{color:#9fe8d8;text-decoration:underline}
+
+  /* upload */
+  .drop{background:var(--card);border:1.5px dashed var(--line);border-radius:10px;
+    padding:1.6rem 1.2rem;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+  .drop:hover,.drop.hot{border-color:var(--accent);background:#fff}
+  .drop h2{font-family:var(--display);font-size:1.15rem;margin:0 0 .35rem;font-weight:700}
+  .drop p{margin:.2rem 0;color:var(--muted);font-size:.92rem}
+  .drop .btn{display:inline-block;margin-top:.7rem;font-family:var(--mono);font-size:.82rem;
+    background:var(--accent);color:#fff;border:none;border-radius:7px;padding:.55rem 1rem;cursor:pointer}
+  .privacy{font-family:var(--mono);font-size:.72rem;color:var(--muted);
+    margin:.7rem 0 0;display:flex;gap:.4rem;align-items:center;justify-content:center}
+  .err{color:var(--ntia);font-size:.85rem;margin-top:.6rem;font-family:var(--mono)}
+  input[type=file]{display:none}
+
+  h3.sec{font-family:var(--display);font-size:1.02rem;font-weight:700;margin:2rem 0 .7rem;
+    padding-bottom:.35rem;border-bottom:1px solid var(--line)}
+
+  /* headline band */
+  .band{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:9px;padding:1.1rem 1.2rem;margin-bottom:1rem}
+  .band .big{font-family:var(--mono);font-size:2.5rem;font-weight:500;line-height:1;color:var(--ink)}
+  .band .cap{font-size:.95rem;color:var(--muted);margin-top:.3rem}
+  .band .cap b{color:var(--ink);font-weight:600}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:.95rem 1rem}
+  .stat .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--ntia);font-weight:500}
+  .stat .n{font-family:var(--mono);font-size:1.7rem;line-height:1.05;margin:.25rem 0 .15rem}
+  .stat .d{font-size:.83rem;color:var(--muted)}
+
+  .tech{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.2rem}
+  .chip{font-family:var(--mono);font-size:.78rem;background:var(--card);border:1px solid var(--line);
+    border-radius:20px;padding:.35rem .7rem;color:var(--ink)}
+  .chip b{color:var(--accent)}
+  .note{font-size:.8rem;color:var(--muted);margin:.5rem 0 0}
+
+  /* budget */
+  .money{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:1rem 1.1rem}
+  .money label{display:block;font-size:.88rem;color:var(--muted);margin-bottom:.35rem}
+  .money .row{display:flex;gap:.7rem;align-items:flex-end;flex-wrap:wrap}
+  .money .field{flex:1;min-width:170px}
+  input.num{font:inherit;font-family:var(--mono);font-size:1rem;width:100%;padding:.5rem .6rem;
+    border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+  input.num:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  .money .out{font-family:var(--mono);font-size:1.9rem;color:var(--ntia);line-height:1;white-space:nowrap}
+  .money .outcap{font-size:.8rem;color:var(--muted);margin-top:.2rem}
+
+  /* table */
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:9px;background:var(--card)}
+  table{border-collapse:collapse;width:100%;min-width:640px;font-size:.88rem}
+  th,td{padding:.6rem .7rem;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-family:var(--mono);font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--muted);font-weight:500;background:var(--paper)}
+  tbody tr:last-child td{border-bottom:none}
+  tfoot td{font-family:var(--mono);font-weight:500;border-top:2px solid var(--line);background:var(--paper)}
+  td.num,th.num{font-family:var(--mono)}
+  td .flag{font-family:var(--mono);font-size:.7rem;font-weight:500;padding:.2rem .5rem;border-radius:5px;
+    display:inline-block}
+  td .flag.act{background:var(--ntia-bg);color:var(--ntia)}
+  td .flag.ok{background:var(--self-bg);color:var(--self)}
+  td input.mini{font:inherit;font-family:var(--mono);font-size:.82rem;width:5.5rem;padding:.3rem .4rem;
+    border:1px solid var(--line);border-radius:5px;background:var(--paper);text-align:right}
+  td input.mini:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  .subrow td{color:var(--muted);font-size:.78rem;padding-top:0;border-bottom:1px solid var(--line)}
+
+  .rebuttal{background:var(--self-bg);border:1px solid var(--self);border-radius:9px;padding:.9rem 1.1rem;
+    display:flex;gap:.9rem;align-items:baseline}
+  .rebuttal .rn{font-family:var(--mono);font-size:1.6rem;color:var(--self);line-height:1}
+  .rebuttal .rt{font-size:.9rem}
+  .rebuttal .rt b{color:var(--self)}
+
+  .means{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:1rem 1.1rem}
+  .means p{margin:.5rem 0;font-size:.92rem}
+  .means p:first-child{margin-top:0}
+  .means .ref{font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+
+  .foot{margin-top:2.2rem;font-size:.78rem;color:var(--muted);line-height:1.6}
+  .foot .ref{font-family:var(--mono);font-size:.7rem}
+  .hidden{display:none}
+  @media (max-width:520px){
+    .grid2{grid-template-columns:1fr}
+    .hero h1{font-size:1.6rem}
+    .band .big{font-size:2rem}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="inner">
+      <p class="eyebrow">BEAD &middot; LEO Capacity Subgrant &middot; Fabric v9 removal wave</p>
+      <h1>The V9 Surprise</h1>
+      <p class="sub">NTIA has handed states a list of LEO subgrant locations to remove from BEAD, drawn from FCC Fabric v9. Drop the file in below for a fast read on how big it is, where it forces a scope change, and how much allocation it takes off the table.</p>
+      <p class="cred">Built by Alexis D. Schrubbe &middot; Licensed <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a></p>
+    </div>
+  </div>
+
+  <div class="drop" id="drop">
+    <input type="file" id="file" accept=".xlsx,.xls">
+    <h2>Drop the NTIA removal file here</h2>
+    <p>The two-tab workbook NTIA sent (Reason Code 3 and Reason Code 5 tabs).</p>
+    <button class="btn" id="pick" type="button">Choose file</button>
+    <p class="privacy">&#128274; Runs entirely in your browser. The file is never uploaded anywhere.</p>
+    <p class="err hidden" id="err"></p>
+  </div>
+
+  <div id="results" class="hidden">
+
+    <div class="band">
+      <div class="big" id="totRemoved">0</div>
+      <div class="cap">locations NTIA is removing across <b id="projCount">0</b> project(s). On this list, removal is the default action; a keep is the exception you have to argue (see the rebuttal lane below).</div>
+    </div>
+
+    <div class="grid2">
+      <div class="stat">
+        <div class="tag">Reason Code 3 &middot; mandated</div>
+        <div class="n" id="rc3n">0</div>
+        <div class="d">No longer depicted in FCC Fabric v9. Removed with RC3.</div>
+      </div>
+      <div class="stat">
+        <div class="tag">Reason Code 5 &middot; mandated</div>
+        <div class="n" id="rc5n">0</div>
+        <div class="d">Shown served by non-subsidized service in the current BDC (availability as of 12/31/2025).</div>
+      </div>
+    </div>
+
+    <h3 class="sec">RC5 by reported technology</h3>
+    <div class="tech" id="techChips"></div>
+    <p class="note">Counts locations reporting each 100/20-plus technology in the file. Not mutually exclusive; a location served by more than one technology appears in each. Codes: 40 cable/HFC, 50 fiber, 70/71/72 fixed wireless.</p>
+
+    <h3 class="sec">Allocation removed</h3>
+    <div class="money">
+      <div class="row">
+        <div class="field">
+          <label for="cost">Approximate per-location cost (from your Final Proposal budget)</label>
+          <input class="num" id="cost" type="number" inputmode="decimal" min="0" placeholder="e.g. 1800">
+        </div>
+        <div>
+          <div class="out" id="moneyOut"></div>
+          <div class="outcap">funding removed from project budgets</div>
+        </div>
+      </div>
+      <p class="note">First-order estimate only (single blended per-location figure applied to all removals). Per-location cost varies by project and technology. Because these removals reduce the served footprint, a corresponding budget modification is required for each affected project.</p>
+    </div>
+
+    <h3 class="sec">By project</h3>
+    <div class="tablewrap">
+      <table id="ptable">
+        <thead>
+          <tr>
+            <th>Project</th>
+            <th class="num">RC3</th>
+            <th class="num">RC5</th>
+            <th class="num">Total</th>
+            <th class="num">Approved base</th>
+            <th>Scope-change trigger</th>
+            <th class="num">Est. $ removed</th>
+            <th class="num">Flag to rebut</th>
+          </tr>
+        </thead>
+        <tbody id="pbody"></tbody>
+        <tfoot id="pfoot"></tfoot>
+      </table>
+    </div>
+    <p class="note">The trigger is the smaller of 20% of a project's BSLs or 200, CAIs included. Enter an approved base to resolve the 20% line; any project over 200 trips it from the file alone. Crossing the trigger requires a New No BEAD Locations Post-Award Change with NTIA approval, plus the budget modification.</p>
+
+    <h3 class="sec">Rebuttal lane</h3>
+    <div class="rebuttal">
+      <div class="rn" id="rebN">0</div>
+      <div class="rt">locations you have flagged to <b>keep</b>. NTIA treats its list as correct by default, so a keep needs EE evidence that disproves the specific entry. Everything not flagged here removes as listed. Use the per-project field above to mark them.</div>
+    </div>
+
+    <h3 class="sec">What happens next</h3>
+    <div class="means">
+      <p>These removals do not go in the June 30 SAR. NTIA reviews the change through a single consolidated Post-Award Change, and only after that SAR has been submitted, reviewed, and approved. <span class="ref">VA transmittal; FAQ 9.8</span></p>
+      <p>Any project shedding more than the smaller of 20% or 200 (CAIs included) needs a New No BEAD Locations Post-Award Change with NTIA approval, not a self-service SAR entry. <span class="ref">FAQ 9.7, p.52; Scope Change &amp; Budget Modification Guidance, p.4</span></p>
+      <p>Each affected project needs a budget modification to reflect the reduced footprint. Confirm the mechanics and your rebuttal entries with your FPO before submitting. <span class="ref">FAQ 9.8; Scope Change &amp; Budget Modification Guidance</span></p>
+    </div>
+
+    <p class="foot">
+      Scope: this tool covers the NTIA-generated LEO Capacity Subgrant removal list only. It counts and flags scale; it does not route non-LEO discretionary drops. For those, use the scope-change decision tree.
+      <br><br>
+      Sources: VA DHCD / NTIA transmittal (July 9, 2026) and its data dictionary; BEAD FAQ 9.7 and 9.8 (FAQ v22); Using BEAD Non-Service Reason Codes During the Period of Performance; BEAD Scope Change and Budget Modification Guidance. A routing aid, not a substitute for the guidance or your FPO.
+      <br><br>
+      <i>The V9 Surprise, by Alexis D. Schrubbe. Licensed under Creative Commons Attribution 4.0 International (CC BY 4.0). You may share and adapt this tool with attribution.</i>
+    </p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+(function(){
+  var els={
+    drop:document.getElementById('drop'), file:document.getElementById('file'),
+    pick:document.getElementById('pick'), err:document.getElementById('err'),
+    results:document.getElementById('results'),
+    totRemoved:document.getElementById('totRemoved'), projCount:document.getElementById('projCount'),
+    rc3n:document.getElementById('rc3n'), rc5n:document.getElementById('rc5n'),
+    techChips:document.getElementById('techChips'),
+    cost:document.getElementById('cost'), moneyOut:document.getElementById('moneyOut'),
+    pbody:document.getElementById('pbody'), pfoot:document.getElementById('pfoot'),
+    rebN:document.getElementById('rebN')
+  };
+
+  var model=null; // {projects:{id:{rc3,rc5}}, order:[], rc3, rc5, tech:{}}
+  var perProject={}; // id -> {base, rebut}
+
+  function fmt(n){ return (n||0).toLocaleString('en-US'); }
+  function money(n){ return '$'+Math.round(n).toLocaleString('en-US'); }
+
+  function findKey(row, needle){
+    var ks=Object.keys(row||{});
+    for(var i=0;i<ks.length;i++){ if(ks[i].toLowerCase().indexOf(needle)>=0) return ks[i]; }
+    return null;
+  }
+  function pickSheet(wb, digit){
+    // prefer a sheet whose name has "reason code <digit>", else any name containing the digit
+    var exact=wb.SheetNames.filter(function(n){return /reason\s*code/i.test(n) && n.indexOf(digit)>=0;});
+    if(exact.length) return exact[0];
+    var loose=wb.SheetNames.filter(function(n){return n.indexOf(digit)>=0;});
+    return loose[0]||null;
+  }
+
+  function parse(wb){
+    var s3=pickSheet(wb,'3'), s5=pickSheet(wb,'5');
+    if(!s3 && !s5) throw new Error('Could not find Reason Code 3 or 5 tabs in this workbook.');
+    var rc3 = s3 ? XLSX.utils.sheet_to_json(wb.Sheets[s3],{defval:null}) : [];
+    var rc5 = s5 ? XLSX.utils.sheet_to_json(wb.Sheets[s5],{defval:null}) : [];
+    var projects={}, order=[];
+    function bump(rows, code){
+      if(!rows.length) return;
+      var pk=findKey(rows[0],'project');
+      rows.forEach(function(r){
+        var p = pk ? (r[pk]==null?'(unassigned)':String(r[pk])) : '(unassigned)';
+        if(!projects[p]){ projects[p]={rc3:0,rc5:0}; order.push(p); }
+        projects[p][code]++;
+      });
+    }
+    bump(rc3,'rc3'); bump(rc5,'rc5');
+    // tech tally from rc5
+    var tech={40:0,50:0,70:0,71:0,72:0};
+    if(rc5.length){
+      var tk=findKey(rc5[0],'tech');
+      if(tk){ rc5.forEach(function(r){
+        var s=String(r[tk]==null?'':r[tk]);
+        [40,50,70,71,72].forEach(function(c){ if(new RegExp('(^|[^0-9])'+c+'([^0-9]|$)').test(s)) tech[c]++; });
+      });}
+    }
+    return {projects:projects, order:order, rc3:rc3.length, rc5:rc5.length, tech:tech};
+  }
+
+  function triggerFor(base){ // smaller of 20% or 200; null base -> only 200 known
+    if(base && base>0) return Math.min(base*0.2, 200);
+    return 200;
+  }
+
+  function render(){
+    if(!model) return;
+    var total=model.rc3+model.rc5;
+    els.totRemoved.textContent=fmt(total);
+    els.projCount.textContent=fmt(model.order.length);
+    els.rc3n.textContent=fmt(model.rc3);
+    els.rc5n.textContent=fmt(model.rc5);
+
+    // tech chips
+    var labels={40:'Cable / HFC',50:'Fiber',70:'FW unlicensed',71:'FW licensed',72:'FW by rule'};
+    var chips='';
+    [50,40,71,70,72].forEach(function(c){
+      if(model.tech[c]>0) chips+='<span class="chip">'+labels[c]+' <b>'+fmt(model.tech[c])+'</b></span>';
+    });
+    els.techChips.innerHTML=chips||'<span class="note">No technology codes found in the RC5 tab.</span>';
+
+    // money
+    var cost=parseFloat(els.cost.value);
+    els.moneyOut.innerHTML = (cost>0) ? money(total*cost) : '';
+
+    // per-project rows
+    var body='', sum={rc3:0,rc5:0,tot:0,dollars:0,rebut:0};
+    model.order.forEach(function(id){
+      var p=model.projects[id], t=p.rc3+p.rc5;
+      var st=perProject[id]||{base:null,rebut:null};
+      var base=st.base, rebut=st.rebut||0;
+      var trig=triggerFor(base);
+      var over=t>trig;
+      var flagTxt, flagCls;
+      if(over){
+        flagCls='act';
+        flagTxt = base>0 ? ('Over '+(Math.min(Math.floor(base*0.2),200))+' &middot; New No BEAD PAC')
+                         : 'Over 200 &middot; New No BEAD PAC';
+      } else {
+        flagCls='ok';
+        flagTxt = base>0 ? 'Within 20% / 200' : 'Enter base to test 20%';
+      }
+      var dollars = cost>0 ? t*cost : null;
+      sum.rc3+=p.rc3; sum.rc5+=p.rc5; sum.tot+=t; sum.rebut+=rebut; if(dollars) sum.dollars+=dollars;
+      body+='<tr>'+
+        '<td>'+id+'</td>'+
+        '<td class="num">'+fmt(p.rc3)+'</td>'+
+        '<td class="num">'+fmt(p.rc5)+'</td>'+
+        '<td class="num">'+fmt(t)+'</td>'+
+        '<td class="num"><input class="mini" data-id="'+id+'" data-f="base" type="number" min="1" placeholder="base" value="'+(base||'')+'"></td>'+
+        '<td><span class="flag '+flagCls+'">'+flagTxt+'</span></td>'+
+        '<td class="num">'+(dollars!=null?money(dollars):'')+'</td>'+
+        '<td class="num"><input class="mini" data-id="'+id+'" data-f="rebut" type="number" min="0" max="'+t+'" placeholder="0" value="'+(st.rebut||'')+'"></td>'+
+      '</tr>';
+    });
+    els.pbody.innerHTML=body;
+    els.pfoot.innerHTML='<tr>'+
+      '<td>All projects</td>'+
+      '<td class="num">'+fmt(sum.rc3)+'</td>'+
+      '<td class="num">'+fmt(sum.rc5)+'</td>'+
+      '<td class="num">'+fmt(sum.tot)+'</td>'+
+      '<td></td><td></td>'+
+      '<td class="num">'+(cost>0?money(sum.dollars):'')+'</td>'+
+      '<td class="num">'+fmt(sum.rebut)+'</td>'+
+    '</tr>';
+
+    els.rebN.textContent=fmt(sum.rebut);
+
+    // wire mini inputs
+    els.pbody.querySelectorAll('input.mini').forEach(function(inp){
+      inp.addEventListener('input',function(){
+        var id=inp.dataset.id, f=inp.dataset.f, v=parseFloat(inp.value);
+        perProject[id]=perProject[id]||{base:null,rebut:null};
+        perProject[id][f]= isNaN(v)?null:v;
+        render();
+      });
+    });
+  }
+
+  function handle(file){
+    els.err.classList.add('hidden');
+    var reader=new FileReader();
+    reader.onload=function(e){
+      try{
+        var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+        model=parse(wb);
+        perProject={};
+        els.results.classList.remove('hidden');
+        render();
+        els.results.scrollIntoView({behavior:'smooth',block:'start'});
+      }catch(ex){
+        els.err.textContent='Could not read that file: '+ex.message;
+        els.err.classList.remove('hidden');
+      }
+    };
+    reader.onerror=function(){ els.err.textContent='Could not read that file.'; els.err.classList.remove('hidden'); };
+    reader.readAsArrayBuffer(file);
+  }
+
+  els.pick.addEventListener('click',function(){els.file.click();});
+  els.drop.addEventListener('click',function(e){ if(e.target!==els.pick) els.file.click(); });
+  els.file.addEventListener('change',function(){ if(els.file.files[0]) handle(els.file.files[0]); });
+  ['dragenter','dragover'].forEach(function(ev){ els.drop.addEventListener(ev,function(e){e.preventDefault();els.drop.classList.add('hot');}); });
+  ['dragleave','drop'].forEach(function(ev){ els.drop.addEventListener(ev,function(e){e.preventDefault();els.drop.classList.remove('hot');}); });
+  els.drop.addEventListener('drop',function(e){ var f=e.dataTransfer.files[0]; if(f) handle(f); });
+  els.cost.addEventListener('input',render);
+})();
+</script>
+</body>
+</html>
