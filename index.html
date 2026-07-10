@@ -8,13 +8,13 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="The V9 Surprise: how big is your LEO removal list?">
 <meta property="og:description" content="Drop in the NTIA v9 LEO removal file and get scale by project: RC3 and RC5 counts, threshold flags, and allocation removed. Runs entirely in your browser.">
-<meta property="og:url" content="https://deuslexxmachina.github.io/V9Surprise/">
-<meta property="og:image" content="https://deuslexxmachina.github.io/V9Surprise/preview.png">
+<meta property="og:url" content="https://deuslexxmachina.github.io/v9Surprise/">
+<meta property="og:image" content="https://deuslexxmachina.github.io/v9Surprise/preview.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="627">
 <meta property="og:image:alt" content="The V9 Surprise, a browser-side scale check for the NTIA Fabric v9 LEO removal list, by Alexis D. Schrubbe.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://deuslexxmachina.github.io/V9Surprise/preview.png">
+<meta name="twitter:image" content="https://deuslexxmachina.github.io/v9Surprise/preview.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Mono:wght@400;500&display=swap');
   :root{
@@ -67,6 +67,8 @@
   .privacy{font-family:var(--mono);font-size:.72rem;color:var(--muted);
     margin:.7rem 0 0;display:flex;gap:.4rem;align-items:center;justify-content:center}
   .err{color:var(--ntia);font-size:.85rem;margin-top:.6rem;font-family:var(--mono)}
+  .sample{text-align:center;font-size:.92rem;color:var(--muted);margin:.9rem 0 0;line-height:1.5}
+  .sample a{color:var(--accent);font-family:var(--mono);font-size:.84rem;word-break:break-all}
   input[type=file]{display:none}
 
   h3.sec{font-family:var(--display);font-size:1.02rem;font-weight:700;margin:2rem 0 .7rem;
@@ -177,6 +179,8 @@
     <p class="privacy">&#128274; Runs entirely in your browser. The file is never uploaded anywhere.</p>
     <p class="err hidden" id="err"></p>
   </div>
+
+  <p class="sample">Try it first with scaled, representative but 100% synthetic data: <a href="TEST_FakeNTIA_Dummy_Data_Locations_V9Surprise.xlsx" download>TEST_FakeNTIA_Dummy_Data_Locations_V9Surprise.xlsx</a></p>
 
   <div id="results" class="hidden">
 
