@@ -33,7 +33,7 @@
     --mono:"DM Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   }
   *{box-sizing:border-box}
-  html{-webkit-text-size-adjust:100%}
+  html{-webkit-text-size-adjust:100%;font-size:106.5%}
   body{
     margin:0;background:var(--paper);color:var(--ink);
     font-family:var(--serif);line-height:1.5;
@@ -91,6 +91,8 @@
     border-radius:20px;padding:.35rem .7rem;color:var(--ink)}
   .chip b{color:var(--accent)}
   .note{font-size:.8rem;color:var(--muted);margin:.5rem 0 0}
+  .tablelead{font-size:1rem;color:var(--ink);line-height:1.5;margin:.45rem 0 .75rem}
+  .tablelead .ref{font-family:var(--mono);font-size:.8rem;color:var(--muted)}
 
   /* budget */
   .money{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:1rem 1.1rem}
@@ -127,6 +129,17 @@
   .rebuttal .rn{font-family:var(--mono);font-size:1.6rem;color:var(--self);line-height:1}
   .rebuttal .rt{font-size:.9rem}
   .rebuttal .rt b{color:var(--self)}
+  .trigcell{display:flex;flex-direction:column;gap:.3rem;align-items:flex-end}
+  .hint{font-family:var(--mono);font-size:.66rem;color:var(--muted);text-align:right;max-width:9rem}
+  .keep{background:var(--self-bg);border:1px solid var(--self);border-radius:9px;padding:1rem 1.1rem}
+  .keep h4{font-family:var(--display);margin:0 0 .5rem;font-size:1.02rem;color:var(--ink)}
+  .keep p{margin:.5rem 0;font-size:.92rem}
+  .keep p:first-of-type{margin-top:0}
+  .keep .ref,.rc5alert .ref{font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+  .rc5alert{background:var(--ntia-bg);border:1px solid var(--ntia);border-left:4px solid var(--ntia);
+    border-radius:9px;padding:1rem 1.1rem;margin-top:.7rem}
+  .rc5alert h4{font-family:var(--display);margin:0 0 .4rem;font-size:1.02rem;color:var(--ntia)}
+  .rc5alert p{margin:0;font-size:.92rem}
 
   .means{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:1rem 1.1rem}
   .means p{margin:.5rem 0;font-size:.92rem}
@@ -169,7 +182,7 @@
 
     <div class="band">
       <div class="big" id="totRemoved">0</div>
-      <div class="cap">locations NTIA is removing across <b id="projCount">0</b> project(s). On this list, removal is the default action; a keep is the exception you have to argue (see the rebuttal lane below).</div>
+      <div class="cap">locations NTIA is removing across <b id="projCount">0</b> project(s). On this list, removal is the default action; a keep is the exception you have to argue with evidence (see "keeping a location off the list" below).</div>
     </div>
 
     <div class="grid2">
@@ -189,22 +202,10 @@
     <div class="tech" id="techChips"></div>
     <p class="note">Counts locations reporting each 100/20-plus technology in the file. Not mutually exclusive; a location served by more than one technology appears in each. Codes: 40 cable/HFC, 50 fiber, 70/71/72 fixed wireless.</p>
 
-    <h3 class="sec">Allocation removed</h3>
-    <div class="money">
-      <div class="row">
-        <div class="field">
-          <label for="cost">Approximate per-location cost (from your Final Proposal budget)</label>
-          <input class="num" id="cost" type="number" inputmode="decimal" min="0" placeholder="e.g. 1800">
-        </div>
-        <div>
-          <div class="out" id="moneyOut"></div>
-          <div class="outcap">funding removed from project budgets</div>
-        </div>
-      </div>
-      <p class="note">First-order estimate only (single blended per-location figure applied to all removals). Per-location cost varies by project and technology. Because these removals reduce the served footprint, a corresponding budget modification is required for each affected project.</p>
-    </div>
-
     <h3 class="sec">By project</h3>
+    <p class="tablelead"><b>Scope-change trigger</b> is the smaller of 20% of a project's BSLs or 200, CAIs included. Any project over 200 removals trips it from the file alone, and crossing it requires a New No BEAD Locations Post-Award Change with NTIA approval plus a budget modification.</p>
+    <p class="tablelead">For a project under 200, you may hand-enter its approved BSL count (its current approved project area, CAIs included) to test the 20% line. <span class="ref">FAQ 9.7, p.52</span></p>
+    <p class="tablelead">The <b>Rate ($/loc)</b> is optional. Please hand-enter the project's approved per-location cost from your Final Proposal budget. The rate is entered per project. Leave it blank to skip the dollar estimate.</p>
     <div class="tablewrap">
       <table id="ptable">
         <thead>
@@ -213,35 +214,38 @@
             <th class="num">RC3</th>
             <th class="num">RC5</th>
             <th class="num">Total</th>
-            <th class="num">Approved base</th>
             <th>Scope-change trigger</th>
+            <th class="num">Rate ($/loc)</th>
             <th class="num">Est. $ removed</th>
-            <th class="num">Flag to rebut</th>
           </tr>
         </thead>
         <tbody id="pbody"></tbody>
         <tfoot id="pfoot"></tfoot>
       </table>
     </div>
-    <p class="note">The trigger is the smaller of 20% of a project's BSLs or 200, CAIs included. Enter an approved base to resolve the 20% line; any project over 200 trips it from the file alone. Crossing the trigger requires a New No BEAD Locations Post-Award Change with NTIA approval, plus the budget modification.</p>
 
-    <h3 class="sec">Rebuttal lane</h3>
-    <div class="rebuttal">
-      <div class="rn" id="rebN">0</div>
-      <div class="rt">locations you have flagged to <b>keep</b>. NTIA treats its list as correct by default, so a keep needs EE evidence that disproves the specific entry. Everything not flagged here removes as listed. Use the per-project field above to mark them.</div>
+    <h3 class="sec">Keeping a location off the list</h3>
+    <div class="keep">
+      <h4>A keep is the exception, and the burden is on you</h4>
+      <p>NTIA has run this list as the grant administrator and treats it as correct by default. To keep any location, review it and determine whether evidence exists to warrant not removing it, then carry that evidence into the consolidated Post-Award Change. Anything you do not contest removes as listed. <span class="ref">NTIA data dictionary</span></p>
+      <p>For an <b>RC3</b> location, a keep means evidence that the location still appears in the current Fabric, or is genuinely serviceable despite the Fabric removal. <span class="ref">Reason Codes During the Period of Performance</span></p>
+    </div>
+    <div class="rc5alert">
+      <h4>Review your RC5 locations before accepting them</h4>
+      <p>RC5 removals rest on service reported in the FCC map (availability as of 12/31/2025). NTIA's own guidance says presence in the BDC should not be the sole basis for removal, so these are the entries most worth checking against what you know on the ground. Where the reported service does not actually reach the location, is subsidized, or does not meet 100/20, assemble evidence that disproves the entry before it comes off. <span class="ref">Reason Codes During the Period of Performance (RC5 may not rely solely on the FCC's BDC)</span></p>
     </div>
 
     <h3 class="sec">What happens next</h3>
     <div class="means">
-      <p>These removals do not go in the June 30 SAR. NTIA reviews the change through a single consolidated Post-Award Change, and only after that SAR has been submitted, reviewed, and approved. <span class="ref">VA transmittal; FAQ 9.8</span></p>
+      <p>These removals do not go in the June 30 SAR. NTIA reviews the change through a single consolidated Post-Award Change, and only after that SAR has been submitted, reviewed, and approved. <span class="ref">NTIA data dictionary; FAQ 9.8</span></p>
       <p>Any project shedding more than the smaller of 20% or 200 (CAIs included) needs a New No BEAD Locations Post-Award Change with NTIA approval, not a self-service SAR entry. <span class="ref">FAQ 9.7, p.52; Scope Change &amp; Budget Modification Guidance, p.4</span></p>
-      <p>Each affected project needs a budget modification to reflect the reduced footprint. Confirm the mechanics and your rebuttal entries with your FPO before submitting. <span class="ref">FAQ 9.8; Scope Change &amp; Budget Modification Guidance</span></p>
+      <p>Each affected project needs a budget modification to reflect the reduced footprint. Confirm the mechanics with your FPO before submitting, including any locations you intend to contest. <span class="ref">FAQ 9.8; Scope Change &amp; Budget Modification Guidance</span></p>
     </div>
 
     <p class="foot">
-      Scope: this tool covers the NTIA-generated LEO Capacity Subgrant removal list only. It counts and flags scale; it does not route non-LEO discretionary drops. For those, use the scope-change decision tree.
+      Scope: this tool covers the recent FCC Fabric v9 NTIA per-state bespoke removal list only. It counts and flags scale only. All uncertainties should be discussed with an NTIA FPO.
       <br><br>
-      Sources: VA DHCD / NTIA transmittal (July 9, 2026) and its data dictionary; BEAD FAQ 9.7 and 9.8 (FAQ v22); Using BEAD Non-Service Reason Codes During the Period of Performance; BEAD Scope Change and Budget Modification Guidance. A routing aid, not a substitute for the guidance or your FPO.
+      Sources: NTIA data dictionary; BEAD FAQ 9.7 and 9.8 (FAQ v22); Using BEAD Non-Service Reason Codes During the Period of Performance; BEAD Scope Change and Budget Modification Guidance. As always, this is a routing aid, not a substitute for the guidance or your FPO.
       <br><br>
       <i>The V9 Surprise, by Alexis D. Schrubbe. Licensed under Creative Commons Attribution 4.0 International (CC BY 4.0). You may share and adapt this tool with attribution.</i>
     </p>
@@ -258,13 +262,11 @@
     totRemoved:document.getElementById('totRemoved'), projCount:document.getElementById('projCount'),
     rc3n:document.getElementById('rc3n'), rc5n:document.getElementById('rc5n'),
     techChips:document.getElementById('techChips'),
-    cost:document.getElementById('cost'), moneyOut:document.getElementById('moneyOut'),
-    pbody:document.getElementById('pbody'), pfoot:document.getElementById('pfoot'),
-    rebN:document.getElementById('rebN')
+    pbody:document.getElementById('pbody'), pfoot:document.getElementById('pfoot')
   };
 
   var model=null; // {projects:{id:{rc3,rc5}}, order:[], rc3, rc5, tech:{}}
-  var perProject={}; // id -> {base, rebut}
+  var perProject={}; // id -> {base, rate}
 
   function fmt(n){ return (n||0).toLocaleString('en-US'); }
   function money(n){ return '$'+Math.round(n).toLocaleString('en-US'); }
@@ -310,11 +312,6 @@
     return {projects:projects, order:order, rc3:rc3.length, rc5:rc5.length, tech:tech};
   }
 
-  function triggerFor(base){ // smaller of 20% or 200; null base -> only 200 known
-    if(base && base>0) return Math.min(base*0.2, 200);
-    return 200;
-  }
-
   function render(){
     if(!model) return;
     var total=model.rc3+model.rc5;
@@ -331,38 +328,46 @@
     });
     els.techChips.innerHTML=chips||'<span class="note">No technology codes found in the RC5 tab.</span>';
 
-    // money
-    var cost=parseFloat(els.cost.value);
-    els.moneyOut.innerHTML = (cost>0) ? money(total*cost) : '';
-
     // per-project rows
-    var body='', sum={rc3:0,rc5:0,tot:0,dollars:0,rebut:0};
+    var body='', sum={rc3:0,rc5:0,tot:0,dollars:0}, anyDollars=false;
     model.order.forEach(function(id){
       var p=model.projects[id], t=p.rc3+p.rc5;
-      var st=perProject[id]||{base:null,rebut:null};
-      var base=st.base, rebut=st.rebut||0;
-      var trig=triggerFor(base);
-      var over=t>trig;
-      var flagTxt, flagCls;
-      if(over){
-        flagCls='act';
-        flagTxt = base>0 ? ('Over '+(Math.min(Math.floor(base*0.2),200))+' &middot; New No BEAD PAC')
-                         : 'Over 200 &middot; New No BEAD PAC';
+      var st=perProject[id]||{base:null,rate:null};
+      var base=st.base, rate=st.rate;
+
+      // trigger cell
+      var trigCell;
+      if(t>200){
+        // over 200 always trips, regardless of base
+        trigCell='<span class="flag act">Over 200 &middot; New No BEAD PAC</span>';
       } else {
-        flagCls='ok';
-        flagTxt = base>0 ? 'Within 20% / 200' : 'Enter base to test 20%';
+        var input='<input class="mini" data-id="'+id+'" data-f="base" type="number" min="1" placeholder="base" value="'+(base||'')+'">';
+        var verdict;
+        if(base>0){
+          var trig=Math.min(base*0.2,200), over=t>trig;
+          verdict = over
+            ? '<span class="flag act">Over '+Math.floor(base*0.2)+' (20%) &middot; New No BEAD PAC</span>'
+            : '<span class="flag ok">Within 20% / 200</span>';
+        } else {
+          verdict='<span class="hint">approved BSL count tests the 20% line</span>';
+        }
+        trigCell='<div class="trigcell">'+input+verdict+'</div>';
       }
-      var dollars = cost>0 ? t*cost : null;
-      sum.rc3+=p.rc3; sum.rc5+=p.rc5; sum.tot+=t; sum.rebut+=rebut; if(dollars) sum.dollars+=dollars;
+
+      // per-project rate + dollars
+      var rateInput='<input class="mini" data-id="'+id+'" data-f="rate" type="number" min="0" placeholder="$/loc" value="'+(rate||'')+'">';
+      var dollars = rate>0 ? t*rate : null;
+      if(dollars!=null){ anyDollars=true; sum.dollars+=dollars; }
+
+      sum.rc3+=p.rc3; sum.rc5+=p.rc5; sum.tot+=t;
       body+='<tr>'+
         '<td>'+id+'</td>'+
         '<td class="num">'+fmt(p.rc3)+'</td>'+
         '<td class="num">'+fmt(p.rc5)+'</td>'+
         '<td class="num">'+fmt(t)+'</td>'+
-        '<td class="num"><input class="mini" data-id="'+id+'" data-f="base" type="number" min="1" placeholder="base" value="'+(base||'')+'"></td>'+
-        '<td><span class="flag '+flagCls+'">'+flagTxt+'</span></td>'+
+        '<td>'+trigCell+'</td>'+
+        '<td class="num">'+rateInput+'</td>'+
         '<td class="num">'+(dollars!=null?money(dollars):'')+'</td>'+
-        '<td class="num"><input class="mini" data-id="'+id+'" data-f="rebut" type="number" min="0" max="'+t+'" placeholder="0" value="'+(st.rebut||'')+'"></td>'+
       '</tr>';
     });
     els.pbody.innerHTML=body;
@@ -372,17 +377,14 @@
       '<td class="num">'+fmt(sum.rc5)+'</td>'+
       '<td class="num">'+fmt(sum.tot)+'</td>'+
       '<td></td><td></td>'+
-      '<td class="num">'+(cost>0?money(sum.dollars):'')+'</td>'+
-      '<td class="num">'+fmt(sum.rebut)+'</td>'+
+      '<td class="num">'+(anyDollars?money(sum.dollars):'')+'</td>'+
     '</tr>';
-
-    els.rebN.textContent=fmt(sum.rebut);
 
     // wire mini inputs
     els.pbody.querySelectorAll('input.mini').forEach(function(inp){
       inp.addEventListener('input',function(){
         var id=inp.dataset.id, f=inp.dataset.f, v=parseFloat(inp.value);
-        perProject[id]=perProject[id]||{base:null,rebut:null};
+        perProject[id]=perProject[id]||{base:null,rate:null};
         perProject[id][f]= isNaN(v)?null:v;
         render();
       });
@@ -415,7 +417,6 @@
   ['dragenter','dragover'].forEach(function(ev){ els.drop.addEventListener(ev,function(e){e.preventDefault();els.drop.classList.add('hot');}); });
   ['dragleave','drop'].forEach(function(ev){ els.drop.addEventListener(ev,function(e){e.preventDefault();els.drop.classList.remove('hot');}); });
   els.drop.addEventListener('drop',function(e){ var f=e.dataTransfer.files[0]; if(f) handle(f); });
-  els.cost.addEventListener('input',render);
 })();
 </script>
 </body>
